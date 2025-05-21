@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Downloader</title>
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --success-color: #4cc9f0;
+            --background-color: #f8f9fa;
+            --card-color: #ffffff;
+            --text-color: #212529;
+            --error-color: #e63946;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 90%;
+            margin: 2rem auto;
+            flex: 1;
+        }
+
+        .card {
+            background-color: var(--card-color);
+            border-radius: 10px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            display: flex;
+            margin-bottom: 1.5rem;
+        }
+
+        #url-input {
+            flex: 1;
+            padding: 1rem;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px 0 0 8px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #url-input:focus {
+            border-color: var(--primary-color);
+        }
+
+        #submit-btn {
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 0 1.5rem;
+            border: none;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #submit-btn:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .url-tip {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: -1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .preview-container {
+            display: none;
+            margin-top: 2rem;
+        }
+
+        .preview-card {
+            background-color: var(--card-color);
+            border-radius: 10px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .preview-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .image-info {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .image-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #f1f3f5;
+            position: relative;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s linear infinite;
+            position: absolute;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .download-btn {
+            background-color: var(--success-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .download-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .error-message {
+            display: none;
+            background-color: rgba(230, 57, 70, 0.1);
+            border-left: 4px solid var(--error-color);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            color: var(--error-color);
+            border-radius: 4px;
+        }
+
+        footer {
+            background-color: #212529;
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: auto;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                width: 95%;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            #url-input {
+                border-radius: 8px 8px 0 0;
+            }
+
+            #submit-btn {
+                border-radius: 0 0 8px 8px;
+                padding: 0.75rem;
+            }
+
+            .preview-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .btn-container {
+                flex-direction: column;
+            }
+
+            .download-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Image Downloader</h1>
+        <p class="subtitle">Download high-quality images from URLs</p>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <div class="input-group">
+                <input type="text" id="url-input" placeholder="Enter image URL (.jpg or .png)" 
+                
+                <button id="submit-btn">Submit</button>
+            </div>
+            <p class="url-tip">Tip: URL should end with .jpg or .png</p>
+
+            <div class="error-message" id="error-message">
+                Please enter a valid image URL that ends with .jpg or .png
+            </div>
+        </div>
+
+        <div class="preview-container" id="preview-container">
+            <div class="preview-card">
+                <div class="preview-header">
+                    <div class="preview-title">Image Preview</div>
+                    <div class="image-info" id="image-info">Loading image info...</div>
+                </div>
+                <div class="image-container">
+                    <img src="" class="image-preview" id="image-preview" alt="Image preview">
+                    <div class="loading-spinner" id="loading-spinner"></div>
+                </div>
+                <div class="btn-container">
+                    <a href="#" id="download-link" class="download-btn" download>
+                        <svg class="download-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
+                        </svg>
+                        Download Image
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2025 Image Downloader | High Quality Image Download Tool</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlInput = document.getElementById('url-input');
+            const submitBtn = document.getElementById('submit-btn');
+            const previewContainer = document.getElementById('preview-container');
+            const imagePreview = document.getElementById('image-preview');
+            const imageInfo = document.getElementById('image-info');
+            const downloadLink = document.getElementById('download-link');
+            const errorMessage = document.getElementById('error-message');
+            const loadingSpinner = document.getElementById('loading-spinner');
+
+            // Function to validate URL
+            function isValidImageUrl(url) {
+                const pattern = /^https?:\/\/.+\.(jpg|jpeg|png)(\?.*)?$/i;
+                return pattern.test(url);
+            }
+
+            // Function to extract filename from URL
+            function getFilenameFromUrl(url) {
+                const urlObj = new URL(url);
+                const pathname = urlObj.pathname;
+                const filename = pathname.split('/').pop();
+                return filename;
+            }
+
+            // Function to format file size
+            function formatFileSize(bytes) {
+                if (bytes < 1024) return bytes + ' bytes';
+                else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + ' KB';
+                else return (bytes / 1048576).toFixed(2) + ' MB';
+            }
+
+            // Function to handle image loading
+            function loadImage(url) {
+                // Show loading spinner
+                loadingSpinner.style.display = 'block';
+                imagePreview.style.opacity = '0.3';
+                
+                // Reset previous image
+                imagePreview.src = '';
+                imageInfo.textContent = 'Loading image info...';
+                
+                // Create a new image object to get dimensions
+                const img = new Image();
+                
+                img.onload = function() {
+                    // Hide loading spinner
+                    loadingSpinner.style.display = 'none';
+                    imagePreview.style.opacity = '1';
+                    
+                    // Display image info
+                    const width = img.naturalWidth;
+                    const height = img.naturalHeight;
+                    imageInfo.textContent = `Dimensions: ${width} × ${height} px • Format: ${url.split('.').pop().toUpperCase()}`;
+                    
+                    // Set download link
+                    downloadLink.href = url;
+                    const filename = getFilenameFromUrl(url);
+                    downloadLink.setAttribute('download', filename);
+                };
+                
+                img.onerror = function() {
+                    // Hide loading spinner
+                    loadingSpinner.style.display = 'none';
+                    
+                    // Display error
+                    imageInfo.textContent = 'Error loading image';
+                    errorMessage.textContent = 'Unable to load the image. Please check the URL and try again.';
+                    errorMessage.style.display = 'block';
+                    previewContainer.style.display = 'none';
+                };
+                
+                // Start loading the image
+                img.src = url;
+                imagePreview.src = url;
+            }
+
+            // Handle submit button click
+            submitBtn.addEventListener('click', function() {
+                const url = urlInput.value.trim();
+                
+                if (isValidImageUrl(url)) {
+                    errorMessage.style.display = 'none';
+                    previewContainer.style.display = 'block';
+                    loadImage(url);
+                } else {
+                    errorMessage.textContent = 'Please enter a valid image URL that ends with .jpg or .png';
+                    errorMessage.style.display = 'block';
+                    previewContainer.style.display = 'none';
+                }
+            });
+
+            // Handle Enter key press
+            urlInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    submitBtn.click();
+                }
+            });
+
+            // Check if there's an initial URL and process it
+            if (urlInput.value.trim() !== '' && isValidImageUrl(urlInput.value.trim())) {
+                submitBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>
